@@ -1,5 +1,6 @@
 # Ignore the environment directory
 Tennis_Linux/
+.idea/
 
 # Byte-compiled / optimized / DLL files
 __pycache__/
