@@ -87,5 +87,5 @@ __Note:__ Before running code in a notebook, change the kernel to match the `p3_
 
 
 ### Report
-See the [report](https://github.com/mayurand/deepRL-p3-Collaborate-and-Compete/Report.ipynb) for more details on the implementation.
+See the [report](https://github.com/mayurand/deepRL-p3-Collaborate-and-Compete/blob/master/Report.ipynb) for more details on the implementation.
 
