@@ -14,7 +14,7 @@ def hidden_init(layer):
 
 class Actor(nn.Module):
     """"Policy model i.e. model mapping states to actions"""
-    def __init__(self, state_size, action_size, seed=0, fc1_units=256, fc2_units=256):
+    def __init__(self, state_size, action_size=2, seed=0, fc1_units=256, fc2_units=256):
         """"
         Initialize parameters and build model.
         Params
@@ -30,8 +30,7 @@ class Actor(nn.Module):
         self.fc1 = nn.Linear(state_size, fc1_units)
         self.fc2 = nn.Linear(fc1_units, fc2_units)
         self.fc3 = nn.Linear(fc2_units, action_size)
-        self.bn1 = nn.BatchNorm1d(fc1_units)
-        self.bn2 = nn.BatchNorm1d(fc2_units)
+        self.bn = nn.BatchNorm1d(fc1_units)
         self.reset_parameters()
 
     def forward(self, state):
@@ -39,21 +38,20 @@ class Actor(nn.Module):
         if state.dim() == 1:
             state = torch.unsqueeze(state,0)
         x = F.relu(self.fc1(state))
-        x = self.bn1(x)
+        x = self.bn(x)
         x = F.relu(self.fc2(x))
-        x = self.bn2(x)
         x = F.tanh(self.fc3(x))
         return x
 
-    def reset_pararmeters(self):
+    def reset_parameters(self):
         """"Initialize weights with non-zero values"""
         self.fc1.weight.data.uniform_(*hidden_init(self.fc1))
         self.fc2.weight.data.uniform_(*hidden_init(self.fc2))
         self.fc3.weight.data.uniform_(-3e-3, 3e-3)
 
-class Critic():
+class Critic(nn.Module):
     """Model estimating the Q-values or action-value function"""
-    def __init__(self, state_size, action_size, seed=0, fc1_units=256, fc2_units=256):
+    def __init__(self, state_size, seed=0, fc1_units=256, fc2_units=256):
         """"
         Initialize parameters and build model.
         Params
@@ -68,31 +66,28 @@ class Critic():
         self.seed = torch.manual_seed(seed)
         self.fc1 = nn.Linear(state_size, fc1_units)
         self.fc2 = nn.Linear(fc1_units, fc2_units)
-        self.fc3 = nn.Linear(fc2_units, action_size)
-        self.bn1 = nn.BatchNorm1d(fc1_units)
-        self.bn2 = nn.BatchNorm1d(fc2_units)
+        self.fc3 = nn.Linear(fc2_units, 1)
+        self.bn = nn.BatchNorm1d(fc1_units)
         self.reset_parameters()
 
-    def reset_pararmeters(self):
+    def reset_parameters(self):
         """"Initialize weights with non-zero values"""
         self.fc1.weight.data.uniform_(*hidden_init(self.fc1))
         self.fc2.weight.data.uniform_(*hidden_init(self.fc2))
         self.fc3.weight.data.uniform_(-3e-3, 3e-3)
 
-    def forward(self, state):
+    def forward(self, states, actions):
         """Critic network mapping states to action values"""
-        if state.dim() == 1:
-            state = torch.unsqueeze(state,0)
-        x = F.relu(self.fc1(state))
-        x = self.bn1(x)
+        xs = torch.cat((states, actions), dim=1)
+        x = F.relu(self.fc1(xs))
+        x = self.bn(x)
         x = F.relu(self.fc2(x))
-        x = self.bn2(x)
         x = self.fc3(x) # No activation function here as we need to estimate the Q-value
         return x
 
 class Actor_Critic_Models():
     """"Class containing all the models for a DDPG agent"""
-    def __init__(self, n_agents, state_size, action_size, seed=0):
+    def __init__(self, n_agents, state_size=24, action_size=2, seed=0):
         """
         Params
         ======
